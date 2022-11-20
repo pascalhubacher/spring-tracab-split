@@ -1,11 +1,15 @@
 package com.mas2022datascience.springtracabsplit.processor;
 
 import com.mas2022datascience.avro.v1.Frame;
+import com.mas2022datascience.avro.v1.Object;
 import io.confluent.kafka.streams.serdes.avro.SpecificAvroSerde;
 import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.common.serialization.Serdes;
+import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.kstream.Consumed;
 import org.apache.kafka.streams.kstream.KStream;
@@ -35,14 +39,16 @@ public class KafkaStreamsRunnerDSL {
     KStream<String, Frame> stream = kStreamBuilder.stream(topicIn,
         Consumed.with(Serdes.String(), frameSerde));
 
-    // invoke the transformer
-//    KStream<String, Frame> transformedStream = stream.map();
-
-    // peek into the stream and execute a println
-    //transformedStream.peek((k,v) -> System.out.println("key: " + k + " - value:" + v));
-
-    // publish result
-//    transformedStream.to(topicOut);
+    KStream<String, Object> playerStream = stream.flatMap(
+      (key, value) -> {
+        List<KeyValue<String, Object>> result = new LinkedList<>();
+        for ( Object valueObject : value.getObjects() ) {
+          result.add(KeyValue.pair(value.getMatch().getId()+"-"+valueObject.getId(), valueObject));
+        }
+        return result;
+      }
+    );
+    playerStream.to(topicOutPlayer);
 
     return stream;
 
