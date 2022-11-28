@@ -58,6 +58,7 @@ public class KafkaStreamsRunnerDSL {
                   .setZ(valueObject.getZ())
                   .setVelocity(valueObject.getVelocity())
                   .setAccelleration(valueObject.getAccelleration())
+                  .setDistance(valueObject.getDistance())
                   .build()
               )
           );
@@ -66,6 +67,8 @@ public class KafkaStreamsRunnerDSL {
       }
     );
     playerStream.to(topicOutPlayer);
+
+    //playerStream.filter((key, value) -> value.getId().equals("250101463")).to("temp");
 
     return stream;
 
